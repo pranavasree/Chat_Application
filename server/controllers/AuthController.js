@@ -1,6 +1,6 @@
 import { User } from "../models/UserModel.js";
 
-import sign from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 const maxAge = 3 * 24 * 60 * 60 * 1000;
 
