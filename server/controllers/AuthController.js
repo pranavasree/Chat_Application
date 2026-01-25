@@ -42,3 +42,5 @@ const signup = async (request, response, next) => {
     return response.status(500).send("Internal Server Error");
   }
 };
+
+export { signup };
