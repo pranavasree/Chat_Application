@@ -121,3 +121,21 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom Scrollbar Styles */
+.scrollbar-hidden::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-hidden::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-hidden::-webkit-scrollbar-thumb {
+  background: #2a2b33;
+  border-radius: 10px;
+}
+
+.scrollbar-hidden::-webkit-scrollbar-thumb:hover {
+  background: #3a3b43;
+}

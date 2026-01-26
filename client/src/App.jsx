@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import Auth from "./pages/auth/index.jsx";
 import Profile from "./pages/profile/index.jsx";
@@ -18,7 +17,7 @@ const PrivateRoute = ({ children }) => {
 const AuthRoute = ({ children }) => {
   const { userInfo } = useAppStore();
   const isAuthenticated = !!userInfo;
-  return !isAuthenticated ? <Navigate to="/chat" /> : children;
+  return isAuthenticated ? <Navigate to="/chat" /> : children;
 };
 
 function App() {
@@ -34,10 +33,10 @@ function App() {
         if (response.status === 200 && response.data.id) {
           setUserInfo(response.data);
         } else {
-          setUserInfo(null);
+          setUserInfo(undefined);
         }
       } catch (error) {
-        setUserInfo(null);
+        setUserInfo(undefined);
       } finally {
         setLoading(false);
       }
@@ -48,7 +47,8 @@ function App() {
     } else {
       setLoading(false);
     }
-  }, [userInfo, setUserInfo]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (loading) {
     return <div>Loading...</div>;
