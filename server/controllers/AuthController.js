@@ -1,7 +1,7 @@
 import { compare } from "bcrypt";
 import { User } from "../models/UserModel.js";
-
 import jwt from "jsonwebtoken";
+import { renameSync, unlinkSync } from "fs";
 
 const maxAge = 3 * 24 * 60 * 60 * 1000;
 
@@ -11,7 +11,7 @@ const createToken = (email, userId) => {
   });
 };
 
-const signup = async (request, response) => {
+export const signup = async (request, response) => {
   try {
     const { email, password } = request.body;
 
@@ -57,7 +57,7 @@ const signup = async (request, response) => {
   }
 };
 
-const login = async (request, response) => {
+export const login = async (request, response) => {
   try {
     const { email, password } = request.body;
 
@@ -101,4 +101,115 @@ const login = async (request, response) => {
   }
 };
 
-export { signup, login };
+export const getUserInfo = async (request, response) => {
+  try {
+    const userData = await User.findById(request.userId);
+    if (!userData) {
+      return response.status(404).send("User not found");
+    }
+    return response.status(200).json({
+      id: userData.id,
+      email: userData.email,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      image: userData.image,
+      profileSetup: userData.profileSetup,
+      color: userData.color,
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    return response.status(500).send("Internal Server Error");
+  }
+};
+
+export const updateProfile = async (request, response) => {
+  try {
+    const { userId } = request;
+    const { firstName, lastName, image, color } = request.body;
+
+    if (!firstName || !lastName || color === undefined) {
+      return response
+        .status(400)
+        .send("First name, last name and color are required");
+    }
+
+    const userData = await User.findByIdAndUpdate(
+      userId,
+      {
+        firstName,
+        lastName,
+        image,
+        color,
+        profileSetup: true,
+      },
+      { new: true },
+    );
+
+    return response.status(200).json({
+      id: userData.id,
+      email: userData.email,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      image: userData.image,
+      profileSetup: userData.profileSetup,
+      color: userData.color,
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    return response.status(500).send("Internal Server Error");
+  }
+};
+
+export const addProfileImage = async (request, response) => {
+  try {
+    if (!request.file) {
+      return response.status(400).send("File is required");
+    }
+
+    const date = Date.now();
+    let fileName = "uploads/profiles/" + date + request.file.originalname;
+    renameSync(request.file.path, fileName);
+
+    const updatedUser = await User.findByIdAndUpdate(
+      request.userId,
+      { image: fileName },
+      { new: true, runValidators: true },
+    );
+
+    return response.status(200).json({
+      image: updatedUser.image,
+    });
+  } catch (error) {
+    console.error("Add profile image error:", error);
+    return response.status(500).send("Internal Server Error");
+  }
+};
+
+export const removeProfileImage = async (request, response) => {
+  try {
+    const { userId } = request;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return response.status(404).send("User not found");
+    }
+
+    // Delete the file from the filesystem if it exists
+    if (user.image) {
+      try {
+        unlinkSync(user.image);
+      } catch (err) {
+        console.error("Error deleting file:", err);
+      }
+    }
+
+    // Update user to remove image
+    user.image = null;
+    await user.save();
+
+    return response.status(200).send("Profile image removed successfully");
+  } catch (error) {
+    console.error("Remove profile image error:", error);
+    return response.status(500).send("Internal Server Error");
+  }
+};

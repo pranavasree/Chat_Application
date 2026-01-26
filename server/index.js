@@ -22,6 +22,9 @@ app.use(
 app.use(cookieParser());
 app.use(express.json());
 
+// Serve uploaded files
+app.use("/uploads/profiles", express.static("uploads/profiles"));
+
 app.use("/api/auth", authRoutes);
 
 const server = app.listen(port, () => {

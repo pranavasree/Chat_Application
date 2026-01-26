@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
+import { useAppStore } from "@/store";
 
 import apiClient from "@/lib/api-client";
 import { SIGNUP_ROUTE, LOGIN_ROUTE } from "@/utils/constants";
@@ -17,6 +18,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const { setUserInfo } = useAppStore();
 
   const validateLogin = () => {
     if (!email || !password) {
@@ -60,6 +62,7 @@ const Auth = () => {
         console.log(response.data);
         toast.success("Login successful!");
         if (response.data.user.id) {
+          setUserInfo(response.data.user);
           if (response.data.user.profileSetup) {
             navigate("/chat");
           } else {
@@ -91,6 +94,7 @@ const Auth = () => {
         console.log(response.data);
         toast.success("Account created successfully!");
         if (response.status === 201) {
+          setUserInfo(response.data.user);
           navigate("/profile");
         }
       } catch (error) {
