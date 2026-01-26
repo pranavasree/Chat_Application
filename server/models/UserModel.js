@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { genSalt } from "bcrypt";
+import { genSalt, hash } from "bcrypt";
 
 const userSchema = new mongoose.Schema({
   email: { type: String, required: [true, "Email is required"], unique: true },
@@ -11,10 +11,9 @@ const userSchema = new mongoose.Schema({
   profileSetup: { type: Boolean, default: false },
 });
 
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function () {
   const salt = await genSalt();
   this.password = await hash(this.password, salt);
-  next();
 });
 
 export const User = mongoose.model("User", userSchema);

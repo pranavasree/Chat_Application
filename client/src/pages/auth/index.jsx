@@ -3,21 +3,105 @@ import Victory from "@/assets/victory.svg";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { useNavigate } from "react-router-dom";
+
+import apiClient from "@/lib/api-client";
+import { SIGNUP_ROUTE, LOGIN_ROUTE } from "@/utils/constants";
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const Auth = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const validateLogin = () => {
+    if (!email || !password) {
+      toast.error("Please fill all the fields");
+      return false;
+    }
+    if (!email.includes("@")) {
+      toast.error("Please enter a valid email");
+      return false;
+    }
+    return true;
+  };
+
+  const validateSignup = () => {
+    if (!email || !password || !confirmPassword) {
+      toast.error("Please fill all the fields");
+      return false;
+    }
+    if (!email.includes("@")) {
+      toast.error("Please enter a valid email");
+      return false;
+    }
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return false;
+    }
+    return true;
+  };
+
   const handleLogin = async () => {
-    console.log("Login");
+    if (validateLogin()) {
+      try {
+        const response = await apiClient.post(
+          LOGIN_ROUTE,
+          {
+            email,
+            password,
+          },
+          { withCredentials: true },
+        );
+        console.log(response.data);
+        toast.success("Login successful!");
+        if (response.data.user.id) {
+          if (response.data.user.profileSetup) {
+            navigate("/chat");
+          } else {
+            navigate("/profile");
+          }
+        }
+      } catch (error) {
+        console.error(error);
+        if (error.response) {
+          toast.error(error.response.data || "Login failed");
+        } else {
+          toast.error("Network error. Please try again.");
+        }
+      }
+    }
   };
 
   const handleSignup = async () => {
-    console.log("Signup");
+    if (validateSignup()) {
+      try {
+        const response = await apiClient.post(
+          SIGNUP_ROUTE,
+          {
+            email,
+            password,
+          },
+          { withCredentials: true },
+        );
+        console.log(response.data);
+        toast.success("Account created successfully!");
+        if (response.status === 201) {
+          navigate("/profile");
+        }
+      } catch (error) {
+        console.error(error);
+        if (error.response) {
+          toast.error(error.response.data || "Signup failed");
+        } else {
+          toast.error("Network error. Please try again.");
+        }
+      }
+    }
   };
 
   return (
