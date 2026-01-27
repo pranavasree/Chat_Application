@@ -66,7 +66,7 @@ const NewDM = () => {
     <>
       <TooltipProvider>
         <Tooltip>
-          <TooltipTrigger>
+          <TooltipTrigger asChild>
             <Dialog
               open={openNewContactModal}
               onOpenChange={setOpenNewContactModal}
