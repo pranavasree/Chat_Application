@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import authRoutes from "./routes/AuthRoutes.js";
 import contactRoutes from "./routes/ContactRoutes.js";
 import setupSocket from "./socket.js";
+import messagesRoutes from "./routes/MessagesRoutes.js";
 
 dotenv.config();
 
@@ -26,10 +27,13 @@ app.use(express.json());
 
 // Serve uploaded files
 app.use("/uploads/profiles", express.static("uploads/profiles"));
+app.use("/uploads/files", express.static("uploads/files"));
 
 app.use("/api/auth", authRoutes);
 
 app.use("/api/contacts", contactRoutes);
+
+app.use("/api/messages", messagesRoutes);
 
 const server = app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

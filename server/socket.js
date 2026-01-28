@@ -1,4 +1,5 @@
 import { Server as SocketIOServer } from "socket.io";
+import { Message } from "./models/MessagesModel.js";
 
 const setupSocket = (server) => {
   // Parse ORIGIN from .env - it can be a JSON array string or comma-separated string
@@ -32,6 +33,25 @@ const setupSocket = (server) => {
     }
   };
 
+  const sendMessage = async (message) => {
+    const senderSocketId = userSocketMap.get(message.sender);
+    const recipientSocketId = userSocketMap.get(message.recipient);
+
+    const createdMessage = await Message.create(message);
+
+    const messageData = await Message.findById(createdMessage._id)
+      .populate("sender", "id firstName lastName email image color")
+      .populate("recipient", "id firstName lastName email image color");
+
+    if (senderSocketId) {
+      io.to(senderSocketId).emit("receiveMessage", messageData);
+    }
+
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit("receiveMessage", messageData);
+    }
+  };
+
   io.on("connection", (socket) => {
     const userId = socket.handshake.query.userId;
     if (userId) {
@@ -40,6 +60,8 @@ const setupSocket = (server) => {
     } else {
       console.log("⚠️  UserID not provided for connection");
     }
+
+    socket.on("sendMessage", sendMessage);
 
     socket.on("disconnect", () => disconnect(socket));
   });

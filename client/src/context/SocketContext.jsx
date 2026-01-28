@@ -37,6 +37,21 @@ const SocketProvider = ({ children }) => {
         console.log("🔌 Socket disconnected. Reason:", reason);
       });
 
+      const handleReceiveMessage = (message) => {
+        const { selectedChatType, selectedChatData, addMessage } =
+          useAppStore.getState();
+
+        if (
+          selectedChatType !== undefined &&
+          selectedChatData &&
+          (selectedChatData._id === message.sender._id ||
+            selectedChatData._id === message.recipient._id)
+        ) {
+          addMessage(message);
+        }
+      };
+
+      socket.current.on("receiveMessage", handleReceiveMessage);
       return () => {
         if (socket.current) {
           console.log("🔌 Cleaning up socket connection");

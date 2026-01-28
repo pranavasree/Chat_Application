@@ -19,14 +19,14 @@ const Chat = () => {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden text-white">
-      {/* Mobile: Hide contacts when chat is open */}
+      {/* Contacts Container - Always visible on desktop, hidden on mobile when chat is open */}
       <div
-        className={`${selectedChatType !== undefined ? "hidden md:flex" : "flex"} w-full md:w-auto`}
+        className={`${selectedChatType !== undefined ? "hidden md:block" : "block"} md:block`}
       >
         <ContactsContainer />
       </div>
 
-      {/* Mobile: Hide empty/chat when contacts are visible */}
+      {/* Chat/Empty Container - Takes remaining space, hidden on mobile when no chat selected */}
       <div
         className={`${selectedChatType === undefined ? "hidden md:flex" : "flex"} flex-1`}
       >

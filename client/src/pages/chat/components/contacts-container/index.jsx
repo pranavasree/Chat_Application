@@ -1,5 +1,12 @@
 import ProfileInfo from "./components/profile-info";
 import NewDM from "./components/new-dm";
+import { useEffect } from "react";
+import { useAppStore } from "@/store";
+import apiClient from "@/lib/api-client";
+import { GET_DM_CONTACTS_ROUTE, HOST } from "@/utils/constants";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { getColor } from "@/lib/utils";
+import ContactList from "@/components/ui/contact-list";
 
 const Logo = () => {
   return (
@@ -86,6 +93,29 @@ const Logo = () => {
 };
 
 const ContactsContainer = () => {
+  const {
+    directMessagesContacts,
+    setDirectMessagesContacts,
+    selectedChatData,
+  } = useAppStore();
+
+  useEffect(() => {
+    const getContacts = async () => {
+      try {
+        const response = await apiClient.get(GET_DM_CONTACTS_ROUTE, {
+          withCredentials: true,
+        });
+        if (response.status === 200 && response.data.contacts) {
+          setDirectMessagesContacts(response.data.contacts);
+        }
+      } catch (error) {
+        console.error("Error fetching DM contacts:", error);
+      }
+    };
+
+    getContacts();
+  }, [setDirectMessagesContacts, selectedChatData]);
+
   return (
     <div className="relative md:w-[35vw] lg:w-[30vw] xl:w-[20vw] bg-[#1b1c24] border-r-2 border-[#2f303b] w-full flex flex-col h-screen">
       <div className="shrink-0">
@@ -100,12 +130,7 @@ const ContactsContainer = () => {
         </div>
 
         <div className="max-h-[38vh] overflow-y-auto scrollbar-hidden">
-          {/* Contact items will go here */}
-          <div className="px-2 md:px-3 space-y-1">
-            <ContactItem name="John Doe" status="online" unread={3} />
-            <ContactItem name="Jane Smith" status="offline" />
-            <ContactItem name="Mike Johnson" status="online" unread={1} />
-          </div>
+          <ContactList contacts={directMessagesContacts} />
         </div>
       </div>
 
@@ -155,32 +180,53 @@ const Title = ({ text }) => {
   );
 };
 
-const ContactItem = ({ name, status, unread }) => {
+const ContactItem = ({ contact }) => {
+  const { setSelectedChatType, setSelectedChatData, selectedChatData } =
+    useAppStore();
+
+  const handleClick = () => {
+    setSelectedChatType("contact");
+    setSelectedChatData(contact);
+  };
+
+  const isSelected = selectedChatData?._id === contact._id;
+
   return (
-    <div className="flex items-center gap-2 md:gap-3 px-2 md:px-3 py-2 rounded-lg hover:bg-[#2a2b33] cursor-pointer transition-all group">
+    <div
+      onClick={handleClick}
+      className={`flex items-center gap-2 md:gap-3 px-2 md:px-3 py-2 rounded-lg hover:bg-[#2a2b33] cursor-pointer transition-all group ${
+        isSelected ? "bg-[#2a2b33]" : ""
+      }`}
+    >
       <div className="relative shrink-0">
-        <div className="h-9 w-9 md:h-10 md:w-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-semibold text-sm">
-          {name.charAt(0)}
-        </div>
-        {status === "online" && (
-          <div className="absolute bottom-0 right-0 h-2.5 w-2.5 md:h-3 md:w-3 bg-green-500 rounded-full border-2 border-[#1b1c24]"></div>
+        {contact.image ? (
+          <Avatar className="h-9 w-9 md:h-10 md:w-10 rounded-full overflow-hidden">
+            <AvatarImage
+              src={`${HOST}/${contact.image}`}
+              alt="Profile"
+              className="object-cover w-full h-full bg-black"
+            />
+          </Avatar>
+        ) : (
+          <div
+            className={`h-9 w-9 md:h-10 md:w-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${getColor(contact.color || 0)}`}
+          >
+            {contact.firstName
+              ? contact.firstName.charAt(0).toUpperCase()
+              : contact.email.charAt(0).toUpperCase()}
+          </div>
         )}
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-white text-xs md:text-sm font-medium truncate">
-          {name}
+          {contact.firstName && contact.lastName
+            ? `${contact.firstName} ${contact.lastName}`
+            : contact.email}
         </p>
         <p className="text-gray-400 text-[10px] md:text-xs truncate">
-          {status === "online" ? "Online" : "Offline"}
+          {contact.email}
         </p>
       </div>
-      {unread && (
-        <div className="h-4 w-4 md:h-5 md:w-5 bg-purple-500 rounded-full flex items-center justify-center shrink-0">
-          <span className="text-white text-[10px] md:text-xs font-bold">
-            {unread}
-          </span>
-        </div>
-      )}
     </div>
   );
 };
