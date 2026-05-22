@@ -20,6 +20,12 @@ const messageSchema = new mongoose.Schema({
     required: false,
   },
 
+  channelId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Channels",
+    required: false,
+  },
+
   messageType: {
     type: String,
     enum: ["text", "file"],
@@ -32,6 +38,19 @@ const messageSchema = new mongoose.Schema({
       return this.messageType === "file";
     },
   },
+
+  // Deletion tracking
+  deletedForEveryone: {
+    type: Boolean,
+    default: false,
+  },
+
+  deletedFor: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
 });
 
 export const Message = mongoose.model("Message", messageSchema);

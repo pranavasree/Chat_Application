@@ -222,3 +222,19 @@ export const logout = async (request, response) => {
     return response.status(500).send("Internal Server Error");
   }
 };
+
+// Debug endpoint to get all users from database
+export const getAllUsers = async (request, response) => {
+  try {
+    const users = await User.find({}, { password: 0 }).sort({ createdAt: -1 });
+
+    return response.status(200).json({
+      success: true,
+      count: users.length,
+      users: users,
+    });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return response.status(500).send("Internal Server Error");
+  }
+};

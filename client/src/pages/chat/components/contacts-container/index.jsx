@@ -1,5 +1,7 @@
 import ProfileInfo from "./components/profile-info";
 import NewDM from "./components/new-dm";
+import CreateChannel from "./components/create-channel";
+import ChannelsList from "./components/channels-list";
 import { useEffect } from "react";
 import { useAppStore } from "@/store";
 import apiClient from "@/lib/api-client";
@@ -138,29 +140,10 @@ const ContactsContainer = () => {
       <div className="my-3 md:my-5">
         <div className="flex items-center justify-between pr-4 md:pr-10 pl-3 md:pl-5 mb-3">
           <Title text="Channels" />
-          <button className="text-neutral-400 hover:text-white transition-colors">
-            <svg
-              className="w-4 h-4 md:w-5 md:h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-          </button>
+          <CreateChannel />
         </div>
-        <div className="max-h-[38vh] overflow-y-auto scrollbar-hidden">
-          {/* Channel items will go here */}
-          <div className="px-2 md:px-3 space-y-1">
-            <ChannelItem name="General" members={45} />
-            <ChannelItem name="Random" members={32} />
-            <ChannelItem name="Development" members={12} />
-          </div>
+        <div className="max-h-[38vh] overflow-y-auto scrollbar-hidden px-2 md:px-3">
+          <ChannelsList />
         </div>
       </div>
 

@@ -7,6 +7,7 @@ import authRoutes from "./routes/AuthRoutes.js";
 import contactRoutes from "./routes/ContactRoutes.js";
 import setupSocket from "./socket.js";
 import messagesRoutes from "./routes/MessagesRoutes.js";
+import channelRoutes from "./routes/ChannelRoutes.js";
 
 dotenv.config();
 
@@ -14,14 +15,34 @@ const app = express();
 const port = process.env.PORT || 30001;
 const databaseUrl = process.env.DATABASE_URL;
 
+// CORS must be first - handle all origins properly
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, Cookie",
+  );
+
+  // Handle preflight
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
+
 app.use(express.urlencoded({ extended: true }));
-app.use(
-  cors({
-    origin: ["http://localhost:5174", "http://localhost:5173"],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  }),
-);
 app.use(cookieParser());
 app.use(express.json());
 
@@ -34,6 +55,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/contacts", contactRoutes);
 
 app.use("/api/messages", messagesRoutes);
+
+app.use("/api/channels", channelRoutes);
 
 const server = app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

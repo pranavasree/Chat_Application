@@ -3,6 +3,7 @@ export const createChatSlice = (set, get) => ({
   selectedChatData: undefined,
   selectedChatMessages: [],
   directMessagesContacts: [],
+  channels: [],
 
   setSelectedChatType: (selectedChatType) => set({ selectedChatType }),
   setSelectedChatData: (selectedChatData) => set({ selectedChatData }),
@@ -10,6 +11,7 @@ export const createChatSlice = (set, get) => ({
     set({ selectedChatMessages }),
   setDirectMessagesContacts: (directMessagesContacts) =>
     set({ directMessagesContacts }),
+  setChannels: (channels) => set({ channels }),
 
   closeChat: () =>
     set({
@@ -21,7 +23,6 @@ export const createChatSlice = (set, get) => ({
   addMessage: (message) => {
     const selectedChatMessages = get().selectedChatMessages;
     const selectedChatType = get().selectedChatType;
-    const selectedChatData = get().selectedChatData;
     set({
       selectedChatMessages: [
         ...selectedChatMessages,
@@ -37,6 +38,20 @@ export const createChatSlice = (set, get) => ({
               : message.sender._id,
         },
       ],
+    });
+  },
+
+  addChannel: (channel) => {
+    const channels = get().channels;
+    set({ channels: [channel, ...channels] });
+  },
+
+  removeMessage: (messageId) => {
+    const selectedChatMessages = get().selectedChatMessages;
+    set({
+      selectedChatMessages: selectedChatMessages.filter(
+        (msg) => msg._id !== messageId,
+      ),
     });
   },
 });

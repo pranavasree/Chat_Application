@@ -51,7 +51,30 @@ const SocketProvider = ({ children }) => {
         }
       };
 
+      const handleReceiveChannelMessage = (message) => {
+        const { selectedChatType, selectedChatData, addMessage } =
+          useAppStore.getState();
+
+        if (
+          selectedChatType === "channel" &&
+          selectedChatData &&
+          selectedChatData._id === message.channelId
+        ) {
+          console.log("📨 Received channel message:", message);
+          addMessage(message);
+        }
+      };
+
+      const handleMessageDeleted = ({ messageId, deletedForEveryone }) => {
+        const { removeMessage } = useAppStore.getState();
+        console.log("🗑️ Message deleted:", messageId, deletedForEveryone);
+        removeMessage(messageId);
+      };
+
       socket.current.on("receiveMessage", handleReceiveMessage);
+      socket.current.on("receive-channel-message", handleReceiveChannelMessage);
+      socket.current.on("message-deleted", handleMessageDeleted);
+
       return () => {
         if (socket.current) {
           console.log("🔌 Cleaning up socket connection");

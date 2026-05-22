@@ -35,11 +35,14 @@ export const getMessages = async (request, response) => {
     }
 
     // Find all messages where user1 and user2 are either sender or recipient
+    // Exclude messages deleted for everyone or deleted for current user
     const messages = await Message.find({
       $or: [
         { sender: user1, recipient: user2 },
         { sender: user2, recipient: user1 },
       ],
+      deletedForEveryone: false,
+      deletedFor: { $nin: [user1] },
     })
       .populate("sender", "id firstName lastName email image color")
       .populate("recipient", "id firstName lastName email image color")
@@ -48,6 +51,50 @@ export const getMessages = async (request, response) => {
     return response.status(200).json({ messages });
   } catch (error) {
     console.error("Get messages error:", error);
+    return response.status(500).send("Internal Server Error");
+  }
+};
+
+export const deleteMessage = async (request, response) => {
+  try {
+    const { messageId, deleteForEveryone } = request.body;
+    const userId = request.userId;
+
+    if (!messageId) {
+      return response.status(400).send("Message ID is required");
+    }
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return response.status(404).send("Message not found");
+    }
+
+    // Only sender can delete for everyone
+    if (deleteForEveryone) {
+      if (message.sender.toString() !== userId) {
+        return response
+          .status(403)
+          .send("You can only delete your own messages for everyone");
+      }
+      message.deletedForEveryone = true;
+    } else {
+      // Delete for me
+      if (!message.deletedFor.includes(userId)) {
+        message.deletedFor.push(userId);
+      }
+    }
+
+    await message.save();
+
+    return response.status(200).json({
+      success: true,
+      message: deleteForEveryone
+        ? "Message deleted for everyone"
+        : "Message deleted for you",
+    });
+  } catch (error) {
+    console.error("Delete message error:", error);
     return response.status(500).send("Internal Server Error");
   }
 };

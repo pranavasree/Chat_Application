@@ -2,29 +2,47 @@ import { User } from "../models/UserModel.js";
 
 export const searchContacts = async (request, response) => {
   try {
+    console.log("🔍 searchContacts called with body:", request.body);
     const { searchTerm } = request.body;
-    if (!searchTerm) {
-      return response.status(400).send("Search term is required");
+
+    let contacts;
+
+    // If no search term, return all users except the current user
+    if (!searchTerm || searchTerm.trim() === "") {
+      console.log("📋 Empty search term - fetching all users");
+      contacts = await User.find({
+        _id: { $ne: request.userId },
+      }).select("_id firstName lastName email image color");
+
+      console.log(
+        `📋 Returning all ${contacts.length} users for channel creation`,
+      );
+    } else {
+      // Search with the provided term
+      const sanitizedSearchTerm = searchTerm.replace(
+        /[-[\]{}()*+?.,\\^$|#\s]/g,
+        "\\$&",
+      );
+
+      const regex = new RegExp(sanitizedSearchTerm, "i");
+
+      contacts = await User.find({
+        $and: [
+          { _id: { $ne: request.userId } },
+          {
+            $or: [
+              { email: { $regex: regex } },
+              { firstName: { $regex: regex } },
+              { lastName: { $regex: regex } },
+            ],
+          },
+        ],
+      });
+
+      console.log(
+        `🔍 Search for "${searchTerm}" returned ${contacts.length} results`,
+      );
     }
-    const sanitizedSearchTerm = searchTerm.replace(
-      /[-[\]{}()*+?.,\\^$|#\s]/g,
-      "\\$&",
-    );
-
-    const regex = new RegExp(sanitizedSearchTerm, "i");
-
-    const contacts = await User.find({
-      $and: [
-        { _id: { $ne: request.userId } },
-        {
-          $or: [
-            { email: { $regex: regex } },
-            { firstName: { $regex: regex } },
-            { lastName: { $regex: regex } },
-          ],
-        },
-      ],
-    });
 
     return response.status(200).json({ contacts });
   } catch (error) {
@@ -52,6 +70,11 @@ export const getContactsForDMList = async (request, response) => {
     const contactsMap = new Map();
 
     messages.forEach((message) => {
+      // Skip messages without sender or recipient (e.g., channel messages)
+      if (!message.sender || !message.recipient) {
+        return;
+      }
+
       const contactId =
         message.sender._id.toString() === userId
           ? message.recipient._id.toString()

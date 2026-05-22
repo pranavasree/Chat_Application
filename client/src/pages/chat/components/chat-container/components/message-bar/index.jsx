@@ -33,6 +33,7 @@ const MessageBar = () => {
   }, [emojiRef]);
 
   const handleSendMessage = () => {
+    // Handle Direct Messages
     if (selectedChatType === "contact" && selectedChatData) {
       // Send file if uploaded
       if (uploadedFile) {
@@ -52,6 +53,32 @@ const MessageBar = () => {
           content: message,
           sender: userInfo.id,
           recipient: selectedChatData._id,
+          messageType: "text",
+          fileUrl: null,
+        });
+        setMessage("");
+      }
+    }
+    // Handle Channel Messages
+    else if (selectedChatType === "channel" && selectedChatData) {
+      // Send file to channel if uploaded
+      if (uploadedFile) {
+        socket.emit("send-channel-message", {
+          content: null,
+          sender: userInfo.id,
+          channelId: selectedChatData._id,
+          messageType: "file",
+          fileUrl: uploadedFile.filePath,
+        });
+        setUploadedFile(null);
+        toast.success("File sent to channel successfully!");
+      }
+      // Send text message to channel if there's text
+      else if (message.trim()) {
+        socket.emit("send-channel-message", {
+          content: message,
+          sender: userInfo.id,
+          channelId: selectedChatData._id,
           messageType: "text",
           fileUrl: null,
         });
